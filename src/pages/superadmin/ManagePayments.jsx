@@ -1,0 +1,9 @@
+import { useEffect, useState } from "react";
+import api from "../../services/api";
+import { formatCurrency, formatDate } from "../../utils/formatters";
+
+export default function ManagePayments() {
+  const [rows, setRows] = useState([]); const [loading, setLoading] = useState(true);
+  useEffect(() => { api.get("/admin/payments").then((r) => setRows(r.payments || [])).finally(() => setLoading(false)); }, []);
+  return <div className="space-y-6"><div><h2 className="text-2xl font-bold text-slate-900">Payments</h2><p className="text-sm text-slate-500 mt-1">Student purchases and payment history</p></div><div className="bg-white rounded-2xl shadow-sm overflow-hidden"><table className="w-full text-sm"><thead className="bg-slate-50"><tr>{["Order", "Student", "Coach", "Course", "Amount", "Status", "Date"].map((h) => <th key={h} className="px-5 py-3 text-left text-xs font-bold uppercase text-slate-500">{h}</th>)}</tr></thead><tbody className="divide-y">{loading ? <tr><td colSpan={7} className="py-10 text-center text-slate-400">Loading...</td></tr> : rows.length === 0 ? <tr><td colSpan={7} className="py-10 text-center text-slate-400">No payments yet</td></tr> : rows.map((p) => <tr key={p.id} className="hover:bg-slate-50"><td className="px-5 py-3">{p.orderId}</td><td className="px-5 py-3">{p.student?.name || "-"}</td><td className="px-5 py-3">{p.coach?.name || "-"}</td><td className="px-5 py-3">{p.course?.title || "-"}</td><td className="px-5 py-3 font-semibold">{formatCurrency(p.amount || 0, p.currency || "INR")}</td><td className="px-5 py-3">{p.status}</td><td className="px-5 py-3">{p.createdAt ? formatDate(p.createdAt) : "-"}</td></tr>)}</tbody></table></div></div>;
+}

@@ -1,0 +1,9 @@
+import { useEffect, useState } from "react";
+import { TrendingUp } from "lucide-react";
+import api from "../../services/api";
+
+export default function MyProgress() {
+  const [stats, setStats] = useState({}); const [courses, setCourses] = useState([]); const [loading, setLoading] = useState(true);
+  useEffect(() => { Promise.all([api.get("/student/stats"), api.get("/student/courses/enrolled")]).then(([s, c]) => { setStats(s.stats || {}); setCourses(c.courses || []); }).finally(() => setLoading(false)); }, []);
+  return <div className="space-y-6"><div><h2 className="text-2xl font-bold text-slate-900">Progress</h2><p className="text-sm text-slate-500 mt-1">Learning progress across courses</p></div><div className="grid grid-cols-3 gap-4">{[{ label: "Courses", value: stats.enrolledCourses || 0 }, { label: "Average", value: `${Math.round(stats.avgProgress || 0)}%` }, { label: "Spent", value: `?${stats.totalSpent || 0}` }].map((x) => <div key={x.label} className="bg-white rounded-2xl shadow-sm p-5"><TrendingUp className="text-sky-600" /><p className="mt-2 text-2xl font-black">{x.value}</p><p className="text-sm text-slate-500">{x.label}</p></div>)}</div><div className="bg-white rounded-2xl shadow-sm p-5 space-y-4">{loading ? <p className="text-slate-500">Loading...</p> : courses.length === 0 ? <p className="text-slate-500">No progress yet</p> : courses.map(({ enrollment, course }) => <div key={enrollment.id}><div className="flex justify-between text-sm"><span className="font-semibold">{course.title}</span><span>{Number(enrollment.progress || 0)}%</span></div><div className="mt-2 h-2 bg-slate-100 rounded-full"><div className="h-2 bg-sky-500 rounded-full" style={{ width: `${Number(enrollment.progress || 0)}%` }} /></div></div>)}</div></div>;
+}

@@ -1,0 +1,10 @@
+import { useEffect, useState } from "react";
+import { BarChart3 } from "lucide-react";
+import api from "../../services/api";
+import { formatCurrency } from "../../utils/formatters";
+
+export default function Reports() {
+  const [data, setData] = useState({ revenue: 0, courseSales: [] }); const [stats, setStats] = useState({}); const [loading, setLoading] = useState(true);
+  useEffect(() => { Promise.all([api.get("/admin/reports"), api.get("/admin/stats")]).then(([r, s]) => { setData(r.reports || {}); setStats(s.stats || {}); }).finally(() => setLoading(false)); }, []);
+  return <div className="space-y-6"><div><h2 className="text-2xl font-bold text-slate-900">Reports</h2><p className="text-sm text-slate-500 mt-1">Platform revenue and course sales</p></div><div className="grid grid-cols-1 md:grid-cols-4 gap-4">{[{ label: "Revenue", value: formatCurrency(data.revenue || 0) }, { label: "Coaches", value: stats.coaches || 0 }, { label: "Students", value: stats.students || 0 }, { label: "Enrollments", value: stats.enrollments || 0 }].map((x) => <div key={x.label} className="bg-white rounded-2xl shadow-sm p-5"><BarChart3 className="text-emerald-600" /><p className="mt-3 text-2xl font-black">{x.value}</p><p className="text-sm text-slate-500">{x.label}</p></div>)}</div><div className="bg-white rounded-2xl shadow-sm overflow-hidden"><table className="w-full text-sm"><thead className="bg-slate-50"><tr><th className="px-5 py-3 text-left text-xs font-bold uppercase text-slate-500">Course</th><th className="px-5 py-3 text-left text-xs font-bold uppercase text-slate-500">Sales</th><th className="px-5 py-3 text-left text-xs font-bold uppercase text-slate-500">Revenue</th></tr></thead><tbody className="divide-y">{loading ? <tr><td colSpan={3} className="py-10 text-center text-slate-400">Loading...</td></tr> : (data.courseSales || []).map((row) => <tr key={row.id || row.course?.id}><td className="px-5 py-3 font-semibold">{row.title || row.course?.title}</td><td className="px-5 py-3">{row.sales}</td><td className="px-5 py-3">{formatCurrency(row.revenue || row.course?.revenue || 0)}</td></tr>)}</tbody></table></div></div>;
+}

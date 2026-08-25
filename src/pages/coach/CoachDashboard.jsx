@@ -1,0 +1,33 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { ArrowRight, BookOpen, ClipboardList, DollarSign, Eye, HelpCircle, PlusCircle, TrendingUp, Users } from "lucide-react";
+import api from "../../services/api";
+import { formatCurrency } from "../../utils/formatters";
+
+export default function CoachDashboard() {
+  const [stats, setStats] = useState({});
+  const [courses, setCourses] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [earnings, setEarnings] = useState({ netRevenue: 0 });
+
+  useEffect(() => {
+    let alive = true;
+    Promise.all([api.get("/coach/stats"), api.get("/coach/courses"), api.get("/coach/students"), api.get("/coach/earnings")]).then(([statsRes, courseRes, studentRes, earningRes]) => {
+      if (!alive) return;
+      setStats(statsRes.stats || {});
+      setCourses((courseRes.courses || []).slice(0, 3));
+      setStudents((studentRes.students || []).slice(0, 4));
+      setEarnings(earningRes.earnings || { netRevenue: 0 });
+    }).catch(() => {}).finally(() => {});
+    return () => { alive = false; };
+  }, []);
+
+  const metrics = [
+    { label: "Courses Live", value: stats.publishedCourses || 0, delta: `${stats.courses || 0} total`, icon: BookOpen, tone: "bg-violet-50 text-violet-700 ring-violet-100" },
+    { label: "Students", value: stats.students || 0, delta: `${stats.enrollments || 0} enrollments`, icon: Users, tone: "bg-emerald-50 text-emerald-700 ring-emerald-100" },
+    { label: "Earnings", value: formatCurrency(earnings.netRevenue || stats.revenue || 0), delta: "net revenue", icon: DollarSign, tone: "bg-amber-50 text-amber-700 ring-amber-100" },
+    { label: "Assignments", value: "Live", delta: "API connected", icon: ClipboardList, tone: "bg-rose-50 text-rose-700 ring-rose-100" },
+  ];
+
+  return <div className="space-y-5"><section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"><div className="grid gap-5 bg-[#15171f] p-6 text-white lg:grid-cols-[1fr_360px]"><div><p className="text-xs font-black uppercase tracking-[0.22em] text-amber-300">Coach Studio</p><h2 className="mt-3 text-3xl font-black tracking-tight text-white">Build, review, and scale your course business.</h2><p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">Live courses, students, assignments, and revenue are now connected to backend APIs.</p><div className="mt-5 flex flex-wrap gap-2"><Link to="/coach/create-course" className="inline-flex items-center gap-2 rounded-lg bg-amber-400 px-4 py-2.5 text-sm font-black text-slate-950 hover:bg-amber-300"><PlusCircle size={17} /> New Course</Link><Link to="/coach/my-students" className="inline-flex items-center gap-2 rounded-lg border border-white/15 px-4 py-2.5 text-sm font-black text-white hover:bg-white/10">Review Students <ArrowRight size={17} /></Link><Link to="/coach/quizzes" className="inline-flex items-center gap-2 rounded-lg border border-white/15 px-4 py-2.5 text-sm font-black text-white hover:bg-white/10"><HelpCircle size={17} /> Quizzes</Link></div></div><div className="rounded-lg border border-white/10 bg-white/5 p-4"><div className="flex items-center justify-between text-slate-300"><span className="text-sm font-bold">Completion health</span><TrendingUp size={18} className="text-amber-300" /></div><div className="mt-5 flex items-end gap-3"><p className="text-5xl font-black text-white">{stats.students || 0}</p><p className="pb-2 text-sm font-semibold text-emerald-200">active students</p></div><div className="mt-5 h-2 rounded-full bg-white/10"><div className="h-full rounded-full bg-amber-400" style={{ width: `${Math.min(Number(stats.students || 0) * 10, 100)}%` }} /></div></div></div></section><div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">{metrics.map(({ label, value, delta, icon: Icon, tone }) => <div key={label} className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-start justify-between gap-4"><div><p className="text-sm font-bold text-slate-500">{label}</p><p className="mt-2 text-2xl font-black tracking-tight text-slate-950">{value}</p></div><div className={`rounded-lg p-3 ring-1 ${tone}`}><Icon size={22} /></div></div><p className="mt-4 text-xs font-bold text-slate-500">{delta}</p></div>)}</div><div className="grid grid-cols-1 gap-5 xl:grid-cols-2"><section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm"><div className="mb-4 flex items-center justify-between"><div><h3 className="font-black text-slate-950">Recent Students</h3><p className="text-sm text-slate-500">Enrollment activity</p></div><Link to="/coach/my-students" className="text-sm font-black text-amber-700">View all</Link></div><div className="space-y-3">{students.length === 0 ? <p className="py-8 text-center text-sm text-slate-400">No students yet</p> : students.map((row) => <div key={row.enrollment?.id} className="rounded-lg border border-slate-100 bg-slate-50/80 p-4"><div className="flex items-center justify-between gap-3"><div className="min-w-0"><p className="truncate font-black text-slate-950">{row.student?.name}</p><p className="truncate text-sm text-slate-500">{row.course?.title}</p></div><span className="text-sm font-black text-slate-700">{Number(row.enrollment?.progress || 0)}%</span></div></div>)}</div></section><section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm"><div className="mb-4 flex items-center justify-between"><div><h3 className="font-black text-slate-950">Course Portfolio</h3><p className="text-sm text-slate-500">Your latest courses</p></div><Link to="/coach/my-courses" className="text-sm font-black text-amber-700">Manage</Link></div><div className="grid grid-cols-1 gap-3 lg:grid-cols-3">{courses.length === 0 ? <p className="col-span-full py-8 text-center text-sm text-slate-400">No courses yet</p> : courses.map((course) => <article key={course.id} className="rounded-lg border border-slate-200 bg-slate-50 p-4"><div className="flex items-start justify-between gap-3"><div><h4 className="font-black text-slate-950">{course.title}</h4><p className="mt-1 text-sm text-slate-500">{course.students || 0} students</p></div><Link to={`/coach/course-detail/${course.id}`} className="rounded-lg bg-white p-2 text-slate-600 shadow-sm" aria-label="View course"><Eye size={16} /></Link></div><div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-3"><span className="font-black text-slate-950">{formatCurrency(course.revenue || 0)}</span><span className="rounded-md bg-white px-2 py-1 text-xs font-black text-slate-700">{course.status}</span></div></article>)}</div></section></div></div>;
+}

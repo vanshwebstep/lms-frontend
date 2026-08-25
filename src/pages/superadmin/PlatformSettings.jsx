@@ -1,0 +1,2 @@
+import AccountSettings from "../../components/account/AccountSettings";
+export default function PlatformSettings() { return <AccountSettings title="Admin Settings" subtitle="Update admin profile, password, and notifications" />; }
