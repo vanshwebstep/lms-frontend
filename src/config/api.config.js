@@ -65,6 +65,12 @@ const API_CONFIG = {
       VIDEO: '/upload/video',
       DOCUMENT: '/upload/document',
     },
+    // Email Templates
+    EMAIL_TEMPLATES: {
+      LIST: '/email-templates',
+      DETAIL: (id) => `/email-templates/${id}`,
+      TEST_SEND: (id) => `/email-templates/${id}/test-send`,
+    },
   },
 }
 

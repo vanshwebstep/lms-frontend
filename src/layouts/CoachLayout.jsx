@@ -3,6 +3,7 @@ import {
   ClipboardList,
   DollarSign,
   LayoutDashboard,
+  Mail,
   Settings,
   Users,
 } from 'lucide-react'
@@ -14,6 +15,7 @@ const navItems = [
   { path: '/coach/manage-lessons', label: 'Content Builder', icon: BookOpen },
   { path: '/coach/my-students', label: 'Students', icon: Users },
   { path: '/coach/assignments', label: 'Assignments', icon: ClipboardList },
+  { path: '/coach/email-templates', label: 'Email Templates', icon: Mail },
   { path: '/coach/earnings', label: 'Earnings', icon: DollarSign },
   { path: '/coach/settings', label: 'Settings', icon: Settings },
 ]

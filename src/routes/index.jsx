@@ -33,6 +33,7 @@ import MyLearning from '../pages/student/MyLearning'
 import PlatformSettings from '../pages/superadmin/PlatformSettings'
 import ManagePayments from '../pages/superadmin/ManagePayments'
 import ManageMasterData from '../pages/superadmin/ManageMasterData'
+import EmailTemplates from '../pages/superadmin/EmailTemplates'
 
 // Coach pages
 import CoachDashboard from '../pages/coach/CoachDashboard'
@@ -51,6 +52,7 @@ import MyStudents from '../pages/coach/MyStudents'
 import StudentProgress from '../pages/coach/StudentProgress'
 import CoachEarnings from '../pages/coach/CoachEarnings'
 import CoachSettings from '../pages/coach/CoachSettings'
+import CoachEmailTemplates from '../pages/coach/CoachEmailTemplates'
 
 // Student pages
 import StudentDashboard from '../pages/student/StudentDashboard'
@@ -88,6 +90,7 @@ const router = createBrowserRouter([
           { path: '/admin/students', element: <ManageStudents /> },
           { path: '/admin/courses', element: <ManageCourses /> },
           { path: '/admin/courses/:id', element: <AdminCourseDetail /> },
+          { path: '/admin/email-templates', element: <EmailTemplates /> },
           { path: '/admin/master-data', element: <ManageMasterData /> },
           { path: '/admin/payments', element: <ManagePayments /> },
           { path: '/admin/subscriptions', element: placeholder('Subscriptions') },
@@ -120,6 +123,7 @@ const router = createBrowserRouter([
           { path: '/coach/pricing-plans', element: <PricingPlans /> },
           { path: '/coach/my-students', element: <MyStudents /> },
           { path: '/coach/students/:id/progress', element: <StudentProgress /> },
+          { path: '/coach/email-templates', element: <CoachEmailTemplates /> },
           { path: '/coach/earnings', element: <CoachEarnings /> },
           { path: '/coach/settings', element: <CoachSettings /> },
         ],
