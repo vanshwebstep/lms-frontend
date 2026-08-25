@@ -54,6 +54,7 @@ const API_CONFIG = {
     },
     // Payments
     PAYMENTS: {
+      CHECKOUT: '/payments/checkout',
       CREATE_ORDER: '/payments/create-order',
       VERIFY: '/payments/verify',
       HISTORY: '/payments/history',
