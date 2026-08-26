@@ -99,10 +99,12 @@ export default function EmailTemplates() {
     }
   }
 
-  const handleTestSend = async (toEmail) => {
+  const handleTestSend = async (toEmail, draftData = {}) => {
     if (!selectedTemplate) return
     await api.post(`/email-templates/${selectedTemplate.id}/test-send`, {
       to: toEmail,
+      subject: draftData.subject,
+      html_template: draftData.html_template,
     })
   }
 
@@ -232,12 +234,12 @@ export default function EmailTemplates() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {/* <button
+          <button
             onClick={() => setSmtpModal(true)}
             className="flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
           >
             <Server size={14} /> SMTP Settings
-          </button> */}
+          </button>
           <button
             onClick={() => setNewTemplateModal(true)}
             className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-indigo-700"

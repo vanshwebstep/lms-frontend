@@ -77,10 +77,12 @@ export default function CoachEmailTemplates() {
     }
   }
 
-  const handleTestSend = async (toEmail) => {
+  const handleTestSend = async (toEmail, draftData = {}) => {
     if (!selectedTemplate) return
     await api.post(`/email-templates/${selectedTemplate.id}/test-send`, {
       to: toEmail,
+      subject: draftData.subject,
+      html_template: draftData.html_template,
     })
   }
 

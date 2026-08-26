@@ -32,6 +32,7 @@ import {
   Layers,
   Sliders,
   Move,
+  RotateCcw,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../../services/api'
@@ -315,6 +316,10 @@ export const generateHtmlFromBlocks = (blocks, emailSettings = {}) => {
     })
     .join('\n')
 
+  const metaComment = `<!-- BLOCKS_METADATA:${encodeURIComponent(
+    JSON.stringify({ blocks, emailSettings })
+  )} -->`
+
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -333,8 +338,44 @@ export const generateHtmlFromBlocks = (blocks, emailSettings = {}) => {
   <div class="email-container">
     ${contentHtml}
   </div>
+  ${metaComment}
 </body>
 </html>`
+}
+
+export const parseBlocksFromHtml = (html, action = '', subject = '') => {
+  if (html && typeof html === 'string') {
+    const match = html.match(/<!-- BLOCKS_METADATA:([^\s]+) -->/)
+    if (match && match[1]) {
+      try {
+        const decoded = decodeURIComponent(match[1])
+        const parsed = JSON.parse(decoded)
+        if (parsed?.blocks && Array.isArray(parsed.blocks) && parsed.blocks.length > 0) {
+          return {
+            blocks: parsed.blocks,
+            emailSettings: parsed.emailSettings || {
+              bodyBg: '#f1f5f9',
+              containerBg: '#ffffff',
+              containerWidth: 600,
+              fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+            },
+          }
+        }
+      } catch (err) {
+        console.warn('Could not parse blocks metadata:', err)
+      }
+    }
+  }
+
+  return {
+    blocks: getPresetBlocksForAction(action, subject),
+    emailSettings: {
+      bodyBg: '#f1f5f9',
+      containerBg: '#ffffff',
+      containerWidth: 600,
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    },
+  }
 }
 
 const getPresetBlocksForAction = (action = '', subject = '') => {
@@ -811,6 +852,7 @@ export default function EmailBuilder({
   isSaving = false,
   title = 'Email Template Customizer',
 }) {
+  // Parse initial blocks and canvas settings from saved HTML or action preset
   const [subject, setSubject] = useState(initialSubject)
   const [viewMode, setViewMode] = useState('visual') // 'visual' | 'code' | 'preview'
   const [previewDevice, setPreviewDevice] = useState('desktop') // 'desktop' | 'mobile'
@@ -820,25 +862,21 @@ export default function EmailBuilder({
   const [isSendingTest, setIsSendingTest] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
 
-  // Overall email canvas settings
-  const [emailSettings, setEmailSettings] = useState({
-    bodyBg: '#f1f5f9',
-    containerBg: '#ffffff',
-    containerWidth: 600,
-    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-  })
+  const initialParsed = useMemo(
+    () => parseBlocksFromHtml(initialHtml, action, initialSubject),
+    [initialHtml, action, initialSubject]
+  )
 
-  // Canvas Blocks initialized matching the specific template action
-  const [blocks, setBlocks] = useState(() => getPresetBlocksForAction(action, initialSubject))
-
+  const [emailSettings, setEmailSettings] = useState(initialParsed.emailSettings)
+  const [blocks, setBlocks] = useState(initialParsed.blocks)
   const [rawHtml, setRawHtml] = useState(initialHtml || '')
 
   useEffect(() => {
     if (initialSubject) setSubject(initialSubject)
     if (initialHtml) setRawHtml(initialHtml)
-    if (action) {
-      setBlocks(getPresetBlocksForAction(action, initialSubject))
-    }
+    const parsed = parseBlocksFromHtml(initialHtml, action, initialSubject)
+    setBlocks(parsed.blocks)
+    setEmailSettings(parsed.emailSettings)
   }, [action, initialSubject, initialHtml])
 
   useEffect(() => {
@@ -852,6 +890,13 @@ export default function EmailBuilder({
   const [draggedIndex, setDraggedIndex] = useState(null)
   const [dropTargetIndex, setDropTargetIndex] = useState(null)
   const fileInputRef = useRef(null)
+
+  const handleResetToPreset = () => {
+    if (!window.confirm('Reset this canvas to the standard action preset layout?')) return
+    const presetBlocks = getPresetBlocksForAction(action, subject)
+    setBlocks(presetBlocks)
+    toast.success('Canvas reset to default action preset')
+  }
 
   // Drag from toolbox into canvas
   const handleToolboxDragStart = (e, type) => {
@@ -1039,7 +1084,11 @@ export default function EmailBuilder({
     setIsSendingTest(true)
     try {
       if (onTestSend) {
-        await onTestSend(testEmailAddress.trim())
+        const currentHtml = viewMode === 'code' ? rawHtml : generateHtmlFromBlocks(blocks, emailSettings)
+        await onTestSend(testEmailAddress.trim(), {
+          subject,
+          html_template: currentHtml,
+        })
         toast.success(`Test email sent to ${testEmailAddress}`)
         setTestEmailModal(false)
       }
@@ -1093,6 +1142,14 @@ export default function EmailBuilder({
               <Eye size={14} /> Live Preview
             </button>
           </div>
+
+          <button
+            onClick={handleResetToPreset}
+            title="Reset canvas blocks to standard action preset"
+            className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+          >
+            <RotateCcw size={13} /> Reset Layout
+          </button>
 
           <button
             onClick={() => setTestEmailModal(true)}

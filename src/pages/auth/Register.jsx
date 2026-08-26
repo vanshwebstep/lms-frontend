@@ -4,6 +4,7 @@ import { BookOpen, Camera, Eye, EyeOff, Lock, Mail, MapPin, Phone, ShieldCheck, 
 import { useAuth } from '../../context/AuthContext'
 import { ROLES } from '../../utils/constants'
 import { getRoleRedirect } from '../../utils/helpers'
+import LocationSelector from '../../components/common/LocationSelector'
 import toast from 'react-hot-toast'
 import './auth.css'
 
@@ -15,6 +16,8 @@ const Register = () => {
     name: '',
     email: '',
     phone: '',
+    country: 'India',
+    state: '',
     city: '',
     education: '',
     password: '',
@@ -29,6 +32,10 @@ const Register = () => {
   const handleChange = (e) =>
     setForm((p) => ({ ...p, [e.target.name]: e.target.value }))
 
+  const handleLocationChange = ({ country, state, city }) => {
+    setForm((p) => ({ ...p, country, state, city }))
+  }
+
   const handleFaceImage = (e) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -39,8 +46,8 @@ const Register = () => {
 
   const handleNext = (e) => {
     e.preventDefault()
-    if (!form.name.trim() || !form.email.trim() || !form.phone.trim() || !form.city.trim() || !form.education.trim()) {
-      toast.error('Please fill all student details')
+    if (!form.name.trim() || !form.email.trim() || !form.phone.trim() || !form.education.trim()) {
+      toast.error('Please fill all required student details')
       return
     }
     if (!form.faceImage) {
@@ -61,6 +68,8 @@ const Register = () => {
     payload.append('name', form.name)
     payload.append('email', form.email)
     payload.append('phone', form.phone)
+    payload.append('country', form.country)
+    payload.append('state', form.state)
     payload.append('city', form.city)
     payload.append('education', form.education)
     payload.append('password', form.password)
@@ -118,11 +127,25 @@ const Register = () => {
             <label className="form-label" htmlFor="register-email">Email Address</label>
             <div className="input-wrapper"><Mail className="input-icon" size={16} /><input id="register-email" type="email" name="email" value={form.email} onChange={handleChange} className="form-input" placeholder="you@example.com" autoComplete="email" /></div>
           </div>
-          <div className="form-row">
-            <div className="form-group"><label className="form-label" htmlFor="register-phone">Phone</label><div className="input-wrapper"><Phone className="input-icon" size={16} /><input id="register-phone" type="tel" name="phone" value={form.phone} onChange={handleChange} className="form-input" placeholder="Phone number" /></div></div>
-            <div className="form-group"><label className="form-label" htmlFor="register-city">City</label><div className="input-wrapper"><MapPin className="input-icon" size={16} /><input id="register-city" type="text" name="city" value={form.city} onChange={handleChange} className="form-input" placeholder="City" /></div></div>
+          <div className="form-group">
+            <label className="form-label" htmlFor="register-phone">Phone</label>
+            <div className="input-wrapper"><Phone className="input-icon" size={16} /><input id="register-phone" type="tel" name="phone" value={form.phone} onChange={handleChange} className="form-input" placeholder="Phone number" /></div>
           </div>
-          <div className="form-group"><label className="form-label" htmlFor="register-education">Education</label><div className="input-wrapper"><BookOpen className="input-icon" size={16} /><input id="register-education" type="text" name="education" value={form.education} onChange={handleChange} className="form-input" placeholder="e.g. B.Tech, Class 12, MBA" /></div></div>
+
+          {/* Dynamic Cascading Country, State, City */}
+          <div className="mb-2 rounded-xl border border-slate-200/80 bg-slate-50/50 p-3">
+            <LocationSelector
+              country={form.country}
+              state={form.state}
+              city={form.city}
+              onChange={handleLocationChange}
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label" htmlFor="register-education">Education</label>
+            <div className="input-wrapper"><BookOpen className="input-icon" size={16} /><input id="register-education" type="text" name="education" value={form.education} onChange={handleChange} className="form-input" placeholder="e.g. B.Tech, Class 12, MBA" /></div>
+          </div>
           <button type="submit" className="btn-primary">Continue</button>
         </form>
       ) : (
