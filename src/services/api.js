@@ -22,7 +22,12 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config
 
-    if (error.response?.status === 401 && !originalRequest?._retry) {
+    if (
+      error.response?.status === 401 && 
+      !originalRequest?._retry &&
+      !originalRequest.url.includes(API_CONFIG.ENDPOINTS.AUTH.LOGIN) &&
+      !originalRequest.url.includes(API_CONFIG.ENDPOINTS.AUTH.REGISTER)
+    ) {
       originalRequest._retry = true
 
       try {
@@ -41,7 +46,7 @@ api.interceptors.response.use(
         return api(originalRequest)
       } catch {
         clearAuth()
-        window.location.href = '/login'
+        window.location.href = `${import.meta.env.BASE_URL}login`
         return Promise.reject(error)
       }
     }

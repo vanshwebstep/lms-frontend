@@ -1,180 +1,76 @@
-import { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Eye, EyeOff, GraduationCap, Lock, Mail, ShieldCheck, UserCog } from 'lucide-react'
-import { useAuth } from '../../context/AuthContext'
-import { getRoleRedirect } from '../../utils/helpers'
-import toast from 'react-hot-toast'
-import './auth.css'
+import { Link } from 'react-router-dom'
+import { GraduationCap, ShieldCheck, UserCog } from 'lucide-react'
 
 const ROLE_OPTIONS = [
   {
-    value: 'student',
+    path: '/login/student',
     label: 'Student',
-    title: 'Student learning portal',
-    subtitle: 'Access enrolled courses, lessons, quizzes, assignments, and checkout.',
+    title: 'Student Portal',
+    subtitle: 'Access enrolled courses, lessons, quizzes, and assignments.',
     Icon: GraduationCap,
-    className: 'auth-card-student',
+    bgColor: 'bg-indigo-50',
+    iconColor: 'text-indigo-600',
+    iconBg: 'bg-indigo-100',
+    hoverBorder: 'hover:border-indigo-300 hover:shadow-indigo-100'
   },
   {
-    value: 'coach',
+    path: '/login/coach',
     label: 'Coach',
-    title: 'Coach course studio',
-    subtitle: 'Create courses, manage learning content, students, revenue, and uploads.',
+    title: 'Coach Studio',
+    subtitle: 'Create courses, manage learning content, students, and revenue.',
     Icon: UserCog,
-    className: 'auth-card-coach',
+    bgColor: 'bg-amber-50',
+    iconColor: 'text-amber-600',
+    iconBg: 'bg-amber-100',
+    hoverBorder: 'hover:border-amber-300 hover:shadow-amber-100'
   },
   {
-    value: 'superadmin',
+    path: '/login/admin',
     label: 'Admin',
-    title: 'Admin control panel',
-    subtitle: 'Manage coaches, students, courses, payments, search, and notifications.',
+    title: 'Admin Panel',
+    subtitle: 'Manage platform, coaches, students, payments, and settings.',
     Icon: ShieldCheck,
-    className: 'auth-card-admin',
+    bgColor: 'bg-slate-50',
+    iconColor: 'text-slate-700',
+    iconBg: 'bg-slate-200',
+    hoverBorder: 'hover:border-slate-300 hover:shadow-slate-100'
   },
 ]
 
 const Login = () => {
-  const { login } = useAuth()
-  const navigate = useNavigate()
-  const location = useLocation()
-  const from = location.state?.from?.pathname
-
-  const [form, setForm] = useState({ email: '', password: '', role: 'student' })
-  const [loading, setLoading] = useState(false)
-  const [showPass, setShowPass] = useState(false)
-
-  const activeRole = ROLE_OPTIONS.find((role) => role.value === form.role) || ROLE_OPTIONS[0]
-  const ActiveIcon = activeRole.Icon
-
-  const handleChange = (e) =>
-    setForm((p) => ({ ...p, [e.target.name]: e.target.value }))
-
-  const handleRoleSelect = (role) =>
-    setForm((p) => ({ ...p, role }))
-
-  const finishLogin = async (credentials) => {
-    const user = await login(credentials)
-    toast.success(`Welcome back, ${user.name}!`)
-    navigate(from || getRoleRedirect(user.role), { replace: true })
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-
-    if (!form.email || !form.password) {
-      toast.error('Please fill all fields')
-      return
-    }
-
-    setLoading(true)
-
-    try {
-      await finishLogin(form)
-    } catch (err) {
-      toast.error(err?.message || 'Invalid credentials')
-    } finally {
-      setLoading(false)
-    }
-  }
-
   return (
-    <div className={`auth-card animate-slideUp ${activeRole.className}`}>
-      <div className="auth-logo">
-        <div className="auth-logo-icon">
-          <ActiveIcon size={25} />
-        </div>
-        <span className="auth-logo-text">LearnFlow</span>
+    <div className="w-full max-w-4xl mx-auto py-8 animate-slideUp">
+      <div className="text-center mb-10">
+        <h1 className="text-4xl font-bold text-gray-900 mb-4 tracking-tight">Welcome to LearnFlow</h1>
+        <p className="text-lg text-gray-500 max-w-xl mx-auto">
+          Please select your role to continue to your customized dashboard.
+        </p>
       </div>
 
-      <div className="auth-role-panel">
-        <p className="auth-role-kicker">{activeRole.label} Login</p>
-        <h1 className="auth-title">{activeRole.title}</h1>
-        <p className="auth-subtitle">{activeRole.subtitle}</p>
-      </div>
-
-      <div className="role-selector auth-role-tabs" aria-label="Choose login role">
-        {ROLE_OPTIONS.map(({ value, label, Icon }) => (
-          <button
-            key={value}
-            type="button"
-            className={`role-option auth-role-tab ${form.role === value ? 'selected' : ''}`}
-            onClick={() => handleRoleSelect(value)}
-            aria-pressed={form.role === value}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {ROLE_OPTIONS.map(({ path, label, title, subtitle, Icon, bgColor, iconColor, iconBg, hoverBorder }) => (
+          <Link
+            key={path}
+            to={path}
+            className={`flex flex-col items-center text-center p-8 rounded-2xl border-2 border-transparent bg-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${hoverBorder}`}
           >
-            <span className="role-icon"><Icon size={17} /></span>
-            <span className="role-label">{label}</span>
-          </button>
+            <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 ${iconBg} ${iconColor}`}>
+              <Icon size={40} />
+            </div>
+            <span className={`text-sm font-semibold uppercase tracking-wider mb-2 ${iconColor}`}>
+              {label}
+            </span>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">{title}</h2>
+            <p className="text-gray-500 text-sm leading-relaxed">
+              {subtitle}
+            </p>
+          </Link>
         ))}
       </div>
-
-      <form onSubmit={handleSubmit} className="auth-form">
-        <div className="form-group">
-          <label className="form-label" htmlFor="login-email">Email Address</label>
-          <div className="input-wrapper">
-            <Mail className="input-icon" size={16} />
-            <input
-              id="login-email"
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              className="form-input"
-              placeholder="you@example.com"
-              autoComplete="email"
-            />
-          </div>
-        </div>
-
-        <div className="form-group">
-          <div className="form-label-row">
-            <label className="form-label" htmlFor="login-password">Password</label>
-            <Link to="/forgot-password" className="form-link">
-              Forgot password?
-            </Link>
-          </div>
-
-          <div className="input-wrapper">
-            <Lock className="input-icon" size={16} />
-            <input
-              id="login-password"
-              type={showPass ? 'text' : 'password'}
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              className="form-input"
-              placeholder="Enter your password"
-              autoComplete="current-password"
-            />
-
-            <button
-              type="button"
-              className="input-toggle"
-              onClick={() => setShowPass((p) => !p)}
-              aria-label={showPass ? 'Hide password' : 'Show password'}
-            >
-              {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          </div>
-        </div>
-
-        <button type="submit" className="btn-primary" disabled={loading}>
-          {loading ? (
-            <>
-              <span className="btn-spinner" />
-              Signing in...
-            </>
-          ) : (
-            `Sign in as ${activeRole.label}`
-          )}
-        </button>
-      </form>
-
-      <p className="auth-footer-text">
-        Student account needed?{' '}
-        <Link to="/register" className="form-link">
-          Create student account
-        </Link>
-      </p>
+      
+      <div className="mt-12 text-center text-gray-500 text-sm">
+        <p>Don't have an account yet? <Link to="/register" className="text-indigo-600 font-medium hover:underline">Register as a Student</Link></p>
+      </div>
     </div>
   )
 }

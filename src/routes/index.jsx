@@ -12,6 +12,9 @@ import StudentLayout from '../layouts/StudentLayout'
 
 // Auth pages
 import Login from '../pages/auth/Login'
+import StudentLogin from '../pages/auth/logins/StudentLogin'
+import CoachLogin from '../pages/auth/logins/CoachLogin'
+import AdminLogin from '../pages/auth/logins/AdminLogin'
 import Register from '../pages/auth/Register'
 import ForgotPassword from '../pages/auth/ForgotPassword'
 import ResetPassword from '../pages/auth/ResetPassword'
@@ -73,6 +76,9 @@ const router = createBrowserRouter([
     element: <AuthLayout />,
     children: [
       { path: '/login', element: <Login /> },
+      { path: '/login/student', element: <StudentLogin /> },
+      { path: '/login/coach', element: <CoachLogin /> },
+      { path: '/login/admin', element: <AdminLogin /> },
       { path: '/register', element: <Register /> },
       { path: '/forgot-password', element: <ForgotPassword /> },
       { path: '/reset-password/:token', element: <ResetPassword /> },
