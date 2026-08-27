@@ -25,7 +25,7 @@ export default function CreateQuiz() {
   const { quizId } = useParams();
   const editing = Boolean(quizId);
   const [courses, setCourses] = useState([]);
-  const [meta, setMeta] = useState({ title: "", description: "", courseId: "", passingScore: "60", status: "published" });
+  const [meta, setMeta] = useState({ title: "", description: "", courseId: "", passingScore: "60", dripDays: "0", status: "published" });
   const [questions, setQuestions] = useState([makeQuestion()]);
   const [loading, setLoading] = useState(Boolean(quizId));
   const [saving, setSaving] = useState(false);
@@ -51,6 +51,7 @@ export default function CreateQuiz() {
             description: quiz.description || "",
             courseId: quiz.courseId || courseList[0]?.id || "",
             passingScore: String(quiz.passingScore || 60),
+            dripDays: String(quiz.dripDays || 0),
             status: quiz.status || "published",
           });
           const existingQuestions = (quiz.questionItems || []).map(normalizeQuestion);
@@ -103,6 +104,7 @@ export default function CreateQuiz() {
       const payload = {
         ...meta,
         passingScore: Number(meta.passingScore || 60),
+        dripDays: Number(meta.dripDays || 0),
         status,
         questions: questions.map((question, index) => ({
           text: question.text.trim(),
@@ -142,8 +144,9 @@ export default function CreateQuiz() {
           <input name="title" value={meta.title} onChange={changeMeta} placeholder="Quiz title" className="rounded-lg border px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
         </div>
         <textarea name="description" value={meta.description} onChange={changeMeta} rows={3} placeholder="Quiz description" className="w-full resize-none rounded-lg border px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" />
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <label className="block"><span className="mb-1 block text-xs font-black uppercase text-gray-400">Passing Score (%)</span><input name="passingScore" type="number" min="0" max="100" value={meta.passingScore} onChange={changeMeta} className="w-full rounded-lg border px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" /></label>
+          <label className="block"><span className="mb-1 block text-xs font-black uppercase text-gray-400">Drip Days</span><input name="dripDays" type="number" min="0" value={meta.dripDays} onChange={changeMeta} title="Unlock days after enrollment (0 = immediate)" className="w-full rounded-lg border px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300" /></label>
           <label className="block"><span className="mb-1 block text-xs font-black uppercase text-gray-400">Status</span><select name="status" value={meta.status} onChange={changeMeta} className="w-full rounded-lg border px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"><option value="published">Published</option><option value="draft">Draft</option></select></label>
         </div>
       </section>

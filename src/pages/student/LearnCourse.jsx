@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, BookOpen, CheckCircle, ChevronLeft, ChevronRight, ClipboardList, Download, ExternalLink, FileText, HelpCircle, Link as LinkIcon, Paperclip, PlayCircle, Type } from "lucide-react";
+import { ArrowLeft, BookOpen, CheckCircle, ChevronLeft, ChevronRight, ClipboardList, Download, ExternalLink, FileText, HelpCircle, Link as LinkIcon, Paperclip, PlayCircle, Type, Lock } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../../services/api";
 import { resolveMediaUrl } from "../../utils/media";
+import { formatDate } from "../../utils/formatters";
 import { getVideoEmbedUrl, isDirectVideoUrl } from "../../utils/video";
 
 const isSubmitted = (submission) => ["submitted", "graded"].includes(submission?.status);
@@ -133,15 +134,20 @@ export default function LearnCourse() {
               <div className="divide-y divide-slate-100">
                 {sortedLessons.map((lesson, index) => {
                   const done = lesson.progress?.status === "completed";
-                  const Icon = getLessonIcon(lesson.contentType);
+                  const Icon = lesson.isLocked ? Lock : getLessonIcon(lesson.contentType);
                   const active = activeLesson?.id === lesson.id;
+                  
                   return (
-                    <button key={lesson.id} onClick={() => setActiveLessonId(lesson.id)} className={`flex w-full gap-3 p-4 text-left transition ${active ? "bg-sky-50" : "hover:bg-slate-50"}`}>
+                    <button key={lesson.id} onClick={() => !lesson.isLocked && setActiveLessonId(lesson.id)} disabled={lesson.isLocked} className={`flex w-full gap-3 p-4 text-left transition ${active ? "bg-sky-50" : lesson.isLocked ? "bg-slate-50 opacity-60 cursor-not-allowed" : "hover:bg-slate-50"}`}>
                       <span className={`mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${done ? "bg-green-100 text-green-600" : active ? "bg-sky-600 text-white" : "bg-slate-100 text-slate-500"}`}>{done ? <CheckCircle size={18} /> : <Icon size={18} />}</span>
                       <span className="min-w-0 flex-1">
                         <span className="text-xs font-black uppercase text-slate-400">Lesson {index + 1}</span>
                         <span className="mt-1 block font-bold text-slate-900">{lesson.title}</span>
-                        <span className="mt-1 block text-xs text-slate-500">{contentLabel(lesson.contentType)} - {lesson.durationMinutes || 0} min</span>
+                        {lesson.isLocked ? (
+                          <span className="mt-1 block text-xs font-medium text-orange-600">Unlocks on {formatDate(lesson.unlocksAt)}</span>
+                        ) : (
+                          <span className="mt-1 block text-xs text-slate-500">{contentLabel(lesson.contentType)} - {lesson.durationMinutes || 0} min</span>
+                        )}
                       </span>
                     </button>
                   );
@@ -163,12 +169,20 @@ export default function LearnCourse() {
               </div>
 
               <div className="p-5">
-                <LessonPlayer lesson={activeLesson} />
+                {activeLesson.isLocked ? (
+                  <div className="rounded-2xl border border-dashed p-10 text-center text-slate-500">
+                    <Lock className="mx-auto text-orange-400" size={44} />
+                    <p className="mt-4 text-lg font-black text-slate-900">Content Locked</p>
+                    <p className="mt-2 text-sm font-medium text-orange-600">This lesson unlocks on {formatDate(activeLesson.unlocksAt)}</p>
+                  </div>
+                ) : (
+                  <LessonPlayer lesson={activeLesson} />
+                )}
               </div>
 
               <div className="flex flex-col gap-3 border-t p-5 sm:flex-row sm:items-center sm:justify-between">
                 <button onClick={() => goToLesson(-1)} disabled={activeIndex <= 0} className="inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold text-slate-700 disabled:opacity-40"><ChevronLeft size={16} /> Previous</button>
-                <button onClick={() => markComplete(activeLesson.id)} disabled={savingProgress || activeLesson.progress?.status === "completed"} className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-bold text-white disabled:bg-green-100 disabled:text-green-700"><CheckCircle size={16} /> {activeLesson.progress?.status === "completed" ? "Completed" : savingProgress ? "Saving..." : "Mark Complete"}</button>
+                <button onClick={() => markComplete(activeLesson.id)} disabled={activeLesson.isLocked || savingProgress || activeLesson.progress?.status === "completed"} className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-bold text-white disabled:bg-slate-100 disabled:text-slate-400"><CheckCircle size={16} /> {activeLesson.progress?.status === "completed" ? "Completed" : savingProgress ? "Saving..." : "Mark Complete"}</button>
                 <button onClick={() => goToLesson(1)} disabled={activeIndex >= sortedLessons.length - 1} className="inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold text-slate-700 disabled:opacity-40">Next <ChevronRight size={16} /></button>
               </div>
             </section>
@@ -252,16 +266,25 @@ function ActivityPanel({ assignments, quizzes }) {
             {assignments.map(({ assignment, submission }) => {
               const fileUrl = resolveMediaUrl(assignment.attachmentUrl);
               return (
-                <div key={assignment.id} className="rounded-xl border p-3 hover:bg-slate-50">
-                  <Link to={`/student/assignments/${assignment.id}/submit`} className="block">
-                    <p className="font-bold text-slate-900">{assignment.title}</p>
-                    <p className="mt-1 text-xs text-slate-500">{submission ? assignmentStatusLabel(submission.status) : "Not submitted"}</p>
-                  </Link>
-                  {fileUrl && (
-                    <div className="mt-3 flex flex-wrap gap-2 border-t border-slate-100 pt-3">
-                      <a href={fileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-2.5 py-1.5 text-xs font-black text-sky-700"><Paperclip size={13} /> View file</a>
-                      <a href={fileUrl} download className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-black text-slate-700"><Download size={13} /> Download</a>
+                <div key={assignment.id} className={`rounded-xl border p-3 ${assignment.isLocked ? "opacity-60 bg-slate-50" : "hover:bg-slate-50"}`}>
+                  {assignment.isLocked ? (
+                    <div className="block cursor-not-allowed">
+                      <p className="flex items-center gap-2 font-bold text-slate-900"><Lock size={14} className="text-orange-600" /> {assignment.title}</p>
+                      <p className="mt-1 text-xs font-medium text-orange-600">Unlocks on {formatDate(assignment.unlocksAt)}</p>
                     </div>
+                  ) : (
+                    <>
+                      <Link to={`/student/assignments/${assignment.id}/submit`} className="block">
+                        <p className="font-bold text-slate-900">{assignment.title}</p>
+                        <p className="mt-1 text-xs text-slate-500">{submission ? assignmentStatusLabel(submission.status) : "Not submitted"}</p>
+                      </Link>
+                      {fileUrl && (
+                        <div className="mt-3 flex flex-wrap gap-2 border-t border-slate-100 pt-3">
+                          <a href={fileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-2.5 py-1.5 text-xs font-black text-sky-700"><Paperclip size={13} /> View file</a>
+                          <a href={fileUrl} download className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-black text-slate-700"><Download size={13} /> Download</a>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               );
@@ -272,7 +295,19 @@ function ActivityPanel({ assignments, quizzes }) {
 
       <section className="rounded-2xl bg-white p-5 shadow-sm">
         <div className="mb-4 flex items-center gap-2"><HelpCircle size={18} className="text-sky-600" /><h3 className="font-black text-slate-900">Quizzes</h3></div>
-        {quizzes.length === 0 ? <p className="text-sm text-slate-500">No quizzes yet</p> : <div className="space-y-3">{quizzes.map((quiz) => <Link key={quiz.id} to={`/student/quizzes/${quiz.id}/attempt`} className="block rounded-xl border p-3 hover:bg-slate-50"><p className="font-bold text-slate-900">{quiz.title}</p><p className="mt-1 text-xs text-slate-500">{quiz.questions || 0} questions - pass {quiz.passingScore}%</p></Link>)}</div>}
+        {quizzes.length === 0 ? <p className="text-sm text-slate-500">No quizzes yet</p> : <div className="space-y-3">{quizzes.map((quiz) => (
+          quiz.isLocked ? (
+            <div key={quiz.id} className="block cursor-not-allowed rounded-xl border bg-slate-50 p-3 opacity-60">
+              <p className="flex items-center gap-2 font-bold text-slate-900"><Lock size={14} className="text-orange-600" /> {quiz.title}</p>
+              <p className="mt-1 text-xs font-medium text-orange-600">Unlocks on {formatDate(quiz.unlocksAt)}</p>
+            </div>
+          ) : (
+            <Link key={quiz.id} to={`/student/quizzes/${quiz.id}/attempt`} className="block rounded-xl border p-3 hover:bg-slate-50">
+              <p className="font-bold text-slate-900">{quiz.title}</p>
+              <p className="mt-1 text-xs text-slate-500">{quiz.questions || 0} questions - pass {quiz.passingScore}%</p>
+            </Link>
+          )
+        ))}</div>}
       </section>
     </div>
   );

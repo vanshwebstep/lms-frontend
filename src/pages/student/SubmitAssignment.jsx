@@ -1,6 +1,6 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Download, Paperclip, Send, Upload } from "lucide-react";
+import { ArrowLeft, Download, Paperclip, Send, Upload, Lock } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../../services/api";
 import { formatDate } from "../../utils/formatters";
@@ -60,6 +60,16 @@ export default function SubmitAssignment() {
 
   if (loading) return <div className="rounded-2xl bg-white p-10 text-center text-slate-500 shadow-sm">Loading assignment...</div>;
   if (!assignment) return <div className="rounded-2xl bg-white p-10 text-center text-slate-500 shadow-sm">Assignment not found</div>;
+  if (assignment.isLocked) return (
+    <div className="mx-auto max-w-3xl space-y-6">
+      <Link to="/student/my-learning" className="inline-flex items-center gap-2 text-sm font-semibold text-sky-700"><ArrowLeft size={16} /> Back</Link>
+      <div className="rounded-2xl border border-dashed bg-white p-10 text-center text-slate-500 shadow-sm">
+        <Lock className="mx-auto text-orange-400" size={44} />
+        <p className="mt-4 text-lg font-black text-slate-900">Assignment Locked</p>
+        <p className="mt-2 text-sm font-medium text-orange-600">This assignment unlocks on {formatDate(assignment.unlocksAt)}</p>
+      </div>
+    </div>
+  );
 
   const assignmentFile = resolveMediaUrl(assignment.attachmentUrl);
   const submittedFile = resolveMediaUrl(form.fileUrl);

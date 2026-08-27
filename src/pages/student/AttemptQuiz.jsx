@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, BarChart2, CheckCircle, XCircle } from "lucide-react";
+import { ArrowLeft, BarChart2, CheckCircle, XCircle, Lock } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../../services/api";
+import { formatDate } from "../../utils/formatters";
 
 export default function AttemptQuiz() {
   const { quizId } = useParams();
@@ -43,6 +44,16 @@ export default function AttemptQuiz() {
 
   if (loading) return <div className="rounded-2xl bg-white p-10 text-center text-slate-500 shadow-sm">Loading quiz...</div>;
   if (!quiz) return <div className="rounded-2xl bg-white p-10 text-center text-slate-500 shadow-sm">Quiz not found</div>;
+  if (quiz.isLocked) return (
+    <div className="mx-auto max-w-4xl space-y-6">
+      <Link to={quiz.courseId ? `/student/learn/${quiz.courseId}` : "/student/my-learning"} className="inline-flex items-center gap-2 text-sm font-semibold text-sky-700"><ArrowLeft size={16} /> Back to Course</Link>
+      <div className="rounded-2xl border border-dashed bg-white p-10 text-center text-slate-500 shadow-sm">
+        <Lock className="mx-auto text-orange-400" size={44} />
+        <p className="mt-4 text-lg font-black text-slate-900">Quiz Locked</p>
+        <p className="mt-2 text-sm font-medium text-orange-600">This quiz unlocks on {formatDate(quiz.unlocksAt)}</p>
+      </div>
+    </div>
+  );
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
