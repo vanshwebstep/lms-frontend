@@ -156,6 +156,8 @@ const router = createBrowserRouter([
   },
   { path: '/', element: <RootRedirect /> },
   { path: '*', element: <RootRedirect /> },
-])
+],{
+    basename: import.meta.env.BASE_URL,
+  })
 
 export default router
